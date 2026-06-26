@@ -10,8 +10,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 # =====================
 # SOZLAMALAR
 # =====================
-BOT_TOKEN = os.environ.get("8677339015:AAFJO3bngk6AVZqYGP2R88ldw5hVOCKwgho")
-MONGO_URI = os.environ.get("mongodb+srv://javohiraxatov980_db_user:fGhf8nNY3BDGE08u@cluster0.rmrry9g.mongodb.net/?appName=Cluster0")
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+MONGO_URI = os.environ.get("MONGO_URI")
 CHANNEL_ID = "@englishhub1uz"
 ADMIN_ID = 5027894185
 
