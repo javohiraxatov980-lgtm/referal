@@ -1,0 +1,34 @@
+{
+  "users": {
+    "5027894185": {
+      "username": "Axatov_j",
+      "name": "- \u0436\u0430\u0432\u043e\u0445\u0438\u0440 \ud83c\uddfa\ud83c\uddff",
+      "invited": 2
+    },
+    "8378880916": {
+      "username": "edu_adm",
+      "name": ".",
+      "invited": 0
+    },
+    "920405982": {
+      "username": "Isroilovv_08",
+      "name": "\ud835\udcd3\ud835\udcf8\ud835\udcf7\ud835\udcf2\ud835\udd02\ud835\udcf8\ud835\udcfb\u200b",
+      "invited": 1
+    },
+    "966793124": {
+      "username": "Xusnoza Kenjayeva",
+      "name": "Xusnoza Kenjayeva",
+      "invited": 0
+    },
+    "8677339015": {
+      "username": "referalbot_1_bot",
+      "name": "referal bot",
+      "invited": 0
+    }
+  },
+  "referrals": {
+    "8378880916": "5027894185",
+    "920405982": "5027894185",
+    "966793124": "920405982"
+  }
+}
