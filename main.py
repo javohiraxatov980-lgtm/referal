@@ -12,7 +12,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 # =====================
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MONGO_URI = os.environ.get("MONGO_URI")
-CHANNEL_ID = "@englishhub1uz"
+CHANNELS = ["@englishhub1uz", "@kod_dunyosi"]
 ADMIN_ID = 5027894185
 
 # =====================
@@ -47,6 +47,16 @@ async def get_referral(user_id: str):
 
 async def save_referral(user_id: str, referrer_id: str):
     await referrals_col.insert_one({"_id": user_id, "referrer": referrer_id})
+
+async def check_member(user_id):
+    for channel in CHANNELS:
+        try:
+            member = await bot.get_chat_member(channel, user_id)
+            if member.status in ["left", "kicked"]:
+                return False, channel
+        except:
+            return False, channel
+    return True, None
 
 # =====================
 # BOT VA DISPATCHER
@@ -86,36 +96,42 @@ async def start(message: types.Message):
             except:
                 pass
 
-    # Kanal a'zoligini tekshirish
-    try:
-        member = await bot.get_chat_member(CHANNEL_ID, message.from_user.id)
-        is_member = member.status not in ["left", "kicked"]
-    except:
-        is_member = False
-
+    # Kanal tekshirish
+    is_member, not_joined = await check_member(message.from_user.id)
     bot_info = await bot.get_me()
     ref_link = f"https://t.me/{bot_info.username}?start={user_id}"
+    share_text = f"Do'stlaringizni taklif qiling! 🎯\n{ref_link}"
     user = await get_user(user_id)
 
     if is_member:
         await message.answer(
             f"👋 Salom, {message.from_user.full_name}!\n\n"
-            f"🎯 Sizning referral linkingiz:\n{ref_link}\n\n"
+            f"🎯 Sizning referral linkingiz:\n"
+            f"<code>{ref_link}</code>\n\n"
+            f"👆 Linkni bosib nusxalang!\n\n"
             f"👥 Siz taklif qilganlar: {user['invited']} ta\n\n"
             f"🏆 Mukofotlar:\n"
             f"🥇 1-o'rin → 50 ⭐ Stars\n"
             f"🥈 2-o'rin → 25 ⭐ Stars\n\n"
             f"📢 Linkni do'stlaringizga yuboring!",
+            parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(
+                    text="📤 Do'stlarga ulashish",
+                    switch_inline_query=share_text
+                )],
                 [InlineKeyboardButton(text="📊 Mening natijam", callback_data="mystats")],
                 [InlineKeyboardButton(text="🏆 Liderlar jadvali", callback_data="leaderboard")]
             ])
         )
     else:
         await message.answer(
-            f"👋 Salom! Avval kanalga obuna bo'ling:",
+            f"👋 Salom! Avval ikki kanalga ham obuna bo'ling:\n\n"
+            f"1️⃣ @englishhub1uz\n"
+            f"2️⃣ @kod_dunyosi",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="📢 Kanalga o'tish", url=f"https://t.me/{CHANNEL_ID.replace('@', '')}")],
+                [InlineKeyboardButton(text="1️⃣ Ingliz tili kanali", url="https://t.me/englishhub1uz")],
+                [InlineKeyboardButton(text="2️⃣ Dasturlash kanali", url="https://t.me/kod_dunyosi")],
                 [InlineKeyboardButton(text="✅ Obuna bo'ldim", callback_data="check_sub")]
             ])
         )
@@ -125,29 +141,36 @@ async def start(message: types.Message):
 # =====================
 @dp.callback_query(F.data == "check_sub")
 async def check_subscription(callback: types.CallbackQuery):
-    try:
-        member = await bot.get_chat_member(CHANNEL_ID, callback.from_user.id)
-        is_member = member.status not in ["left", "kicked"]
-    except:
-        is_member = False
+    is_member, not_joined = await check_member(callback.from_user.id)
 
     if is_member:
         user_id = str(callback.from_user.id)
         bot_info = await bot.get_me()
         ref_link = f"https://t.me/{bot_info.username}?start={user_id}"
+        share_text = f"Do'stlaringizni taklif qiling! 🎯\n{ref_link}"
         user = await get_user(user_id)
 
         await callback.message.edit_text(
             f"✅ Rahmat! Kanalga obuna bo'ldingiz!\n\n"
-            f"🔗 Sizning referral linkingiz:\n{ref_link}\n\n"
+            f"🎯 Sizning referral linkingiz:\n"
+            f"<code>{ref_link}</code>\n\n"
+            f"👆 Linkni bosib nusxalang!\n\n"
             f"👥 Taklif qilganlar: {user.get('invited', 0)} ta",
+            parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(
+                    text="📤 Do'stlarga ulashish",
+                    switch_inline_query=share_text
+                )],
                 [InlineKeyboardButton(text="📊 Mening natijam", callback_data="mystats")],
                 [InlineKeyboardButton(text="🏆 Liderlar jadvali", callback_data="leaderboard")]
             ])
         )
     else:
-        await callback.answer("❌ Siz hali kanalga obuna bo'lmadingiz!", show_alert=True)
+        await callback.answer(
+            f"❌ Siz hali {not_joined} kanalga obuna bo'lmadingiz!",
+            show_alert=True
+        )
 
 # =====================
 # MENING NATIJAM
@@ -163,14 +186,22 @@ async def my_stats(callback: types.CallbackQuery):
 
     bot_info = await bot.get_me()
     ref_link = f"https://t.me/{bot_info.username}?start={user_id}"
+    share_text = f"Do'stlaringizni taklif qiling! 🎯\n{ref_link}"
 
     await callback.message.edit_text(
         f"📊 SIZNING NATIJANGIZ:\n\n"
         f"👤 Ism: {callback.from_user.full_name}\n"
         f"👥 Taklif qilganlar: {invited} ta\n"
         f"🏅 Reytingdagi o'rni: {rank}-o'rin\n\n"
-        f"🔗 Linkingiz:\n{ref_link}",
+        f"🎯 Sizning linkingiz:\n"
+        f"<code>{ref_link}</code>\n\n"
+        f"👆 Linkni bosib nusxalang!",
+        parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(
+                text="📤 Do'stlarga ulashish",
+                switch_inline_query=share_text
+            )],
             [InlineKeyboardButton(text="🏆 Liderlar jadvali", callback_data="leaderboard")],
             [InlineKeyboardButton(text="🔙 Orqaga", callback_data="back")]
         ])
@@ -262,7 +293,8 @@ async def announce_winner(message: types.Message):
     text += "Barcha ishtirokchilarga rahmat! 🙏"
     await message.answer(text)
     try:
-        await bot.send_message(CHANNEL_ID, text)
+        for channel in CHANNELS:
+            await bot.send_message(channel, text)
     except:
         pass
 
